@@ -1,0 +1,17 @@
+{
+  "name": "MTH 101 Quiz Bank",
+  "short_name": "MTH Quiz",
+  "description": "A mathematics quiz bank with offline access and shareable results.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#863bff",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

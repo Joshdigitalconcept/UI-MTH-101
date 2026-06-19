@@ -80,7 +80,15 @@ function App() {
         )}
       </div>
       <footer className="py-6 text-center text-xs md:text-sm text-gray-500 font-medium bg-white/20 border-t border-gray-200/40 backdrop-blur-sm mt-auto">
-        Created with ❤️ by Gentle soul
+        Created with ❤️ by{' '}
+        <a
+          href="https://gentlesoul.dev"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary font-semibold hover:underline"
+        >
+          Gentle soul
+        </a>
       </footer>
     </div>
   );

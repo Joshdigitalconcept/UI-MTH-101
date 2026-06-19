@@ -5,6 +5,7 @@ export default function Results({ result, onHome, onRetry }) {
   const { questions, answers, score, total, timeTaken, timeLimit } = result;
   const [showReview, setShowReview] = useState(false);
   const [reviewIndex, setReviewIndex] = useState(0);
+  const [shareStatus, setShareStatus] = useState('');
 
   const percentage = Math.round((score / total) * 100);
   const grade = percentage >= 70 ? 'A' : percentage >= 60 ? 'B' : percentage >= 50 ? 'C' : percentage >= 40 ? 'D' : 'F';
@@ -23,6 +24,39 @@ export default function Results({ result, onHome, onRetry }) {
     D: 'text-orange-500',
     F: 'text-wrong',
   };
+
+  const formatShareTime = (s) => {
+    if (s == null) return 'Untimed';
+    const mins = Math.floor(s / 60);
+    const secs = s % 60;
+    return `${mins}m ${secs}s`;
+  };
+
+  async function handleShare() {
+    const percentageText = `${percentage}%`;
+    const summary = `I scored ${score}/${total} (${percentageText}) on the MTH 101 Quiz Bank.`;
+    const details = timeTaken != null
+      ? `Time taken: ${formatShareTime(timeTaken)} / ${formatShareTime(timeLimit)}`
+      : 'Untimed attempt.';
+    const shareText = `${summary}\n${details}\nTry it here: ${window.location.href}`;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'MTH 101 Quiz Result',
+          text: shareText,
+          url: window.location.href,
+        });
+        setShareStatus('Result shared');
+        return;
+      }
+
+      await navigator.clipboard.writeText(shareText);
+      setShareStatus('Result copied to clipboard');
+    } catch {
+      setShareStatus('Unable to share right now');
+    }
+  }
 
   if (showReview) {
     const q = questions[reviewIndex];
@@ -227,6 +261,18 @@ export default function Results({ result, onHome, onRetry }) {
           >
             Home
           </button>
+        </div>
+
+        <div className="mt-4 text-center">
+          <button
+            onClick={handleShare}
+            className="text-primary font-medium hover:underline"
+          >
+            Share result
+          </button>
+          {shareStatus && (
+            <p className="mt-2 text-sm text-gray-500">{shareStatus}</p>
+          )}
         </div>
       </div>
     </div>
