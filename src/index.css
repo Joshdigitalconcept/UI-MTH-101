@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1e3a5f;
+  --color-primary-light: #2d5a8e;
+  --color-primary-dark: #0f1f33;
+  --color-accent: #f59e0b;
+  --color-accent-light: #fbbf24;
+  --color-correct: #10b981;
+  --color-wrong: #ef4444;
+  --color-surface: #f8fafc;
+  --color-surface-dark: #e2e8f0;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  transition: background-color 0.3s ease;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.katex {
+  font-size: 1.05em;
+}
+
+@media (min-width: 768px) {
+  .katex {
+    font-size: 1.1em;
+  }
+}
+
+.dark .katex {
+  color: #e2e8f0;
+}
+
+.option-btn {
+  transition: all 0.2s ease;
+}
+.option-btn:hover {
+  transform: translateX(4px);
+}
+
+@media (max-width: 640px) {
+  .option-btn:hover {
+    transform: none;
+  }
+}
