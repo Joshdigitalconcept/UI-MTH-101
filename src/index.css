@@ -12,8 +12,6 @@
   --color-surface-dark: #e2e8f0;
 }
 
-@custom-variant dark (&:where(.dark, .dark *));
-
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -33,10 +31,6 @@ body {
   .katex {
     font-size: 1.1em;
   }
-}
-
-.dark .katex {
-  color: #e2e8f0;
 }
 
 .option-btn {

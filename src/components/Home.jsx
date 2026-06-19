@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { TOPICS, questions } from '../data/questions';
 import { getHistory } from '../utils/storage';
 
-export default function Home({ onStartQuiz, onViewHistory, dark, toggleDark }) {
+export default function Home({ onStartQuiz, onViewHistory }) {
   const [selectedTopics, setSelectedTopics] = useState([...TOPICS]);
   const [questionCount, setQuestionCount] = useState(15);
   const [timeLimit, setTimeLimit] = useState(30);
   const [timerEnabled, setTimerEnabled] = useState(true);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const history = getHistory();
   const totalAttempts = history.length;
@@ -15,6 +16,14 @@ export default function Home({ onStartQuiz, onViewHistory, dark, toggleDark }) {
     : 0;
 
   const availableQuestions = questions.filter(q => selectedTopics.includes(q.topic));
+
+  const numQuestions = parseInt(questionCount, 10);
+  const isValidCount = !isNaN(numQuestions) && numQuestions > 0;
+
+  const numTimeLimit = parseInt(timeLimit, 10);
+  const isValidTime = !timerEnabled || (!isNaN(numTimeLimit) && numTimeLimit > 0);
+
+  const isStartDisabled = availableQuestions.length === 0 || !isValidCount || !isValidTime;
 
   function toggleTopic(topic) {
     setSelectedTopics(prev =>
@@ -33,13 +42,13 @@ export default function Home({ onStartQuiz, onViewHistory, dark, toggleDark }) {
   }
 
   function handleStart() {
-    if (availableQuestions.length === 0) return;
-    const count = Math.min(questionCount, availableQuestions.length);
+    if (isStartDisabled) return;
+    const finalCount = Math.min(numQuestions, availableQuestions.length);
     const shuffled = [...availableQuestions].sort(() => Math.random() - 0.5);
-    const selected = shuffled.slice(0, count);
+    const selected = shuffled.slice(0, finalCount);
     onStartQuiz({
       questions: selected,
-      timeLimit: timerEnabled ? timeLimit * 60 : null,
+      timeLimit: timerEnabled ? numTimeLimit * 60 : null,
     });
   }
 
@@ -48,75 +57,119 @@ export default function Home({ onStartQuiz, onViewHistory, dark, toggleDark }) {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8 relative">
-          <button
-            onClick={toggleDark}
-            className="absolute right-0 top-0 p-2 rounded-lg bg-white dark:bg-gray-800 shadow-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-            aria-label="Toggle dark mode"
-          >
-            {dark ? (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            )}
-          </button>
-          <h1 className="text-3xl md:text-5xl font-bold text-primary-dark dark:text-white mb-2">
+          <h1 className="text-3xl md:text-5xl font-bold text-primary-dark mb-2">
             MTH 101 Quiz Bank
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-base md:text-lg">
+          <p className="text-gray-600 text-base md:text-lg">
             Elementary Mathematics — University of Ibadan
           </p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-3 gap-3 md:gap-4 mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-3 md:p-4 shadow-sm text-center">
-            <div className="text-xl md:text-2xl font-bold text-primary dark:text-blue-400">{questions.length}</div>
-            <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Questions</div>
+          <div className="bg-white rounded-xl p-3 md:p-4 shadow-sm text-center">
+            <div className="text-xl md:text-2xl font-bold text-primary">{questions.length}</div>
+            <div className="text-xs md:text-sm text-gray-500">Questions</div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-3 md:p-4 shadow-sm text-center">
-            <div className="text-xl md:text-2xl font-bold text-primary dark:text-blue-400">{totalAttempts}</div>
-            <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Attempts</div>
+          <div className="bg-white rounded-xl p-3 md:p-4 shadow-sm text-center">
+            <div className="text-xl md:text-2xl font-bold text-primary">{totalAttempts}</div>
+            <div className="text-xs md:text-sm text-gray-500">Attempts</div>
           </div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-3 md:p-4 shadow-sm text-center">
-            <div className="text-xl md:text-2xl font-bold text-primary dark:text-blue-400">{avgScore}%</div>
-            <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400">Avg Score</div>
+          <div className="bg-white rounded-xl p-3 md:p-4 shadow-sm text-center">
+            <div className="text-xl md:text-2xl font-bold text-primary">{avgScore}%</div>
+            <div className="text-xs md:text-sm text-gray-500">Avg Score</div>
           </div>
         </div>
 
         {/* Topic Selection */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 md:p-6 shadow-sm mb-6">
+        <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm mb-6 relative">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg md:text-xl font-semibold text-gray-800 dark:text-gray-100">Select Topics</h2>
-            <div className="flex gap-2">
-              <button onClick={selectAll} className="text-sm text-primary dark:text-blue-400 hover:underline">All</button>
-              <span className="text-gray-300 dark:text-gray-600">|</span>
-              <button onClick={clearAll} className="text-sm text-primary dark:text-blue-400 hover:underline">None</button>
-            </div>
+            <h2 className="text-lg md:text-xl font-semibold text-gray-800">Select Topics</h2>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {TOPICS.map(topic => {
-              const count = questions.filter(q => q.topic === topic).length;
-              const active = selectedTopics.includes(topic);
-              return (
-                <button
-                  key={topic}
-                  onClick={() => toggleTopic(topic)}
-                  className={`px-2.5 md:px-3 py-1.5 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-all ${
-                    active
-                      ? 'bg-primary text-white shadow-md'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {topic} ({count})
-                </button>
-              );
-            })}
+          <div className="relative">
+            {/* Trigger Button */}
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-all text-left focus:outline-none"
+            >
+              <span className="text-gray-700 font-medium text-sm md:text-base truncate mr-2">
+                {selectedTopics.length === TOPICS.length
+                  ? 'All Topics Selected'
+                  : selectedTopics.length === 0
+                    ? 'Select topics...'
+                    : `${selectedTopics.length} topic${selectedTopics.length > 1 ? 's' : ''} selected: ${selectedTopics.join(', ')}`}
+              </span>
+              <svg
+                className={`w-5 h-5 text-gray-400 transition-transform duration-200 flex-shrink-0 ${dropdownOpen ? 'transform rotate-180' : ''}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Dropdown Menu */}
+            {dropdownOpen && (
+              <>
+                {/* Backdrop overlay to close when clicking outside */}
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setDropdownOpen(false)}
+                />
+                
+                {/* Menu items */}
+                <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl z-20 max-h-72 overflow-y-auto p-2">
+                  <div className="flex justify-between items-center px-3 py-2 border-b border-gray-50 mb-2">
+                    <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Topics</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={selectAll}
+                        className="text-xs text-primary font-bold hover:underline"
+                      >
+                        All
+                      </button>
+                      <span className="text-gray-200 text-xs">|</span>
+                      <button
+                        onClick={clearAll}
+                        className="text-xs text-primary font-bold hover:underline"
+                      >
+                        None
+                      </button>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    {TOPICS.map(topic => {
+                      const count = questions.filter(q => q.topic === topic).length;
+                      const active = selectedTopics.includes(topic);
+                      return (
+                        <button
+                          key={topic}
+                          onClick={() => toggleTopic(topic)}
+                          className="w-full flex items-center justify-between px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                        >
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              checked={active}
+                              readOnly
+                              className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary accent-primary"
+                            />
+                            <span className="text-sm font-medium text-gray-700">{topic}</span>
+                          </div>
+                          <span className="text-xs font-semibold px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
+
+          <p className="text-sm text-gray-500 mt-3">
             {availableQuestions.length} questions available
           </p>
           {availableQuestions.length === 0 && (
@@ -125,14 +178,14 @@ export default function Home({ onStartQuiz, onViewHistory, dark, toggleDark }) {
         </div>
 
         {/* Quiz Settings */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 md:p-6 shadow-sm mb-6">
-          <h2 className="text-lg md:text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">Quiz Settings</h2>
+        <div className="bg-white rounded-xl p-4 md:p-6 shadow-sm mb-6">
+          <h2 className="text-lg md:text-xl font-semibold text-gray-800 mb-4">Quiz Settings</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Number of Questions
               </label>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 items-center">
                 {[5, 10, 15, 20, 30].map(n => (
                   <button
                     key={n}
@@ -140,16 +193,35 @@ export default function Home({ onStartQuiz, onViewHistory, dark, toggleDark }) {
                     className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                       questionCount === n
                         ? 'bg-accent text-white shadow-sm'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
                     {n}
                   </button>
                 ))}
+                <div className="flex items-center gap-1.5 ml-1">
+                  <span className="text-xs text-gray-400 font-medium">Custom:</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max={availableQuestions.length > 0 ? availableQuestions.length : 1}
+                    value={! [5, 10, 15, 20, 30].includes(questionCount) ? questionCount : ''}
+                    onChange={e => {
+                      const val = e.target.value === '' ? '' : parseInt(e.target.value, 10);
+                      setQuestionCount(val);
+                    }}
+                    placeholder="Qty"
+                    className={`w-16 px-2 py-1.5 text-sm rounded-lg border focus:outline-none transition-all ${
+                      !isValidCount && ! [5, 10, 15, 20, 30].includes(questionCount)
+                        ? 'border-wrong focus:border-wrong focus:ring-1 focus:ring-wrong'
+                        : 'border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent'
+                    }`}
+                  />
+                </div>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 <input
                   type="checkbox"
                   checked={timerEnabled}
@@ -159,7 +231,7 @@ export default function Home({ onStartQuiz, onViewHistory, dark, toggleDark }) {
                 Time Limit
               </label>
               {timerEnabled && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 items-center">
                   {[10, 15, 20, 30, 45, 60].map(m => (
                     <button
                       key={m}
@@ -167,12 +239,30 @@ export default function Home({ onStartQuiz, onViewHistory, dark, toggleDark }) {
                       className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                         timeLimit === m
                           ? 'bg-accent text-white shadow-sm'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
                       {m}m
                     </button>
                   ))}
+                  <div className="flex items-center gap-1.5 ml-1">
+                    <span className="text-xs text-gray-400 font-medium">Custom:</span>
+                    <input
+                      type="number"
+                      min="1"
+                      value={! [10, 15, 20, 30, 45, 60].includes(timeLimit) ? timeLimit : ''}
+                      onChange={e => {
+                        const val = e.target.value === '' ? '' : parseInt(e.target.value, 10);
+                        setTimeLimit(val);
+                      }}
+                      placeholder="Mins"
+                      className={`w-16 px-2 py-1.5 text-sm rounded-lg border focus:outline-none transition-all ${
+                        !isValidTime && ! [10, 15, 20, 30, 45, 60].includes(timeLimit)
+                          ? 'border-wrong focus:border-wrong focus:ring-1 focus:ring-wrong'
+                          : 'border-gray-200 focus:border-accent focus:ring-1 focus:ring-accent'
+                      }`}
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -183,14 +273,14 @@ export default function Home({ onStartQuiz, onViewHistory, dark, toggleDark }) {
         <div className="flex gap-3 md:gap-4">
           <button
             onClick={handleStart}
-            disabled={availableQuestions.length === 0}
+            disabled={isStartDisabled}
             className="flex-1 bg-primary hover:bg-primary-light text-white font-bold py-3.5 md:py-4 px-6 md:px-8 rounded-xl text-base md:text-lg shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
           >
             Start Quiz
           </button>
           <button
             onClick={onViewHistory}
-            className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary dark:text-blue-400 font-semibold py-3.5 md:py-4 px-4 md:px-6 rounded-xl text-base md:text-lg shadow-sm border border-gray-200 dark:border-gray-700"
+            className="bg-white hover:bg-gray-50 text-primary font-semibold py-3.5 md:py-4 px-4 md:px-6 rounded-xl text-base md:text-lg shadow-sm border border-gray-200"
           >
             History
           </button>
